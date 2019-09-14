@@ -1,5 +1,6 @@
 package com.divscanner
 
+import com.divscanner.model.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.boot.test.context.SpringBootTest
@@ -24,12 +25,24 @@ class DivscannerApplicationTests {
         val serverUrl = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED${outputSizeToken}&symbol={ticker}&apikey=$apiKey"
         println(serverUrl)
         val client = RestTemplate()
-        val response: ResponseEntity<Dto> = client.getForEntity(serverUrl, Dto::class.java, "BMY")
+        val response: ResponseEntity<StockHistoryStructure> = client.getForEntity(serverUrl, StockHistoryStructure::class.java, "ET")
 
-        val stockData: Map<Date, InnerInfo>? = response.body?.data
 
-        val divList: List<DivEvent>? = stockData?.filter { it.value.divs > BigDecimal.ZERO }
-                ?.map { DivEvent(date = it.key, amount = it.value.divs, price = it.value.close, percent = it.value.divs.div(it.value.close).setScale(4, RoundingMode.DOWN).multiply(BigDecimal.valueOf(400))) }
+        val httpBody = response.body ?: StockHistoryStructure()
+        val stockData: Map<Date, StockHistoryEntry> = httpBody.data
+
+        /*val divList: List<DivEvent>? = stockData?.filter {
+
+            it.value.divs > BigDecimal.ZERO || it.key.toInstant().toString().split('T')[0] == Date().toInstant().toString().split('T')[0]
+
+        }
+                ?.map { DivEvent(date = it.key, divAmount = it.value.divs, price = it.value.close, percent = it.value.divs.div(it.value.close).setScale(4, RoundingMode.DOWN).multiply(BigDecimal.valueOf(400))) }
+*/
+
+        val divList = stockData.toDivEventList()
+        fillTodayDivAmount(divList)
+
+
 
         println("stop")
 
