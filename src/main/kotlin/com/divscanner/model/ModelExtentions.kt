@@ -4,6 +4,8 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.*
 
+/*
+
 fun Map<Date, StockHistoryEntry>.toDivEventList(): List<DivEvent> {
     val filteredMap = this.filter {
         it.value.divs > BigDecimal.ZERO ||
@@ -13,6 +15,15 @@ fun Map<Date, StockHistoryEntry>.toDivEventList(): List<DivEvent> {
     return fillTodayDivAmount (filteredMap.map { DivEvent(date = it.key, divAmount = it.value.divs, price = it.value.close)})
             .map{it.setPercent()}
            //  percent = it.value.close.div(it.value.divs).setScale(4, RoundingMode.DOWN).multiply(BigDecimal.valueOf(4*100))) }
+}
+*/
+
+fun Map<Date, StockHistoryEntry>.toDivEventList(): List<DivEvent> {
+    return this.filter {
+        it.value.divs > BigDecimal.ZERO
+    }.map { DivEvent(date = it.key, divAmount = it.value.divs, price = it.value.close, percent = it.value.divs.div(it.value.close)
+            .setScale(4, RoundingMode.DOWN).multiply(BigDecimal.valueOf(4 * 100))) }
+
 }
 
 
